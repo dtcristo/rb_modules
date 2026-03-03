@@ -1,5 +1,6 @@
-$LOAD_PATH.unshift('lib')
-require 'rb_modules'
+$LOAD_PATH.unshift('../lib')
+$LOAD_PATH.unshift('.')
+require 'rb/package'
 
 puts '--- 1. Single Import ---'
 Customer = import 'user'
