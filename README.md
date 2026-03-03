@@ -63,10 +63,7 @@ If the target file exported multiple items via a Hash, `import` returns an anony
 ```ruby
 MathUtils = import_relative 'math'
 
-# Accessing a constant
 puts MathUtils::PI        # => 3.14159
-
-# Accessing values and methods (both act as singleton methods)
 puts MathUtils.version    # => "1.0.0"
 puts MathUtils.add(5, 5)  # => 10
 ```
@@ -89,33 +86,70 @@ import('math') => { add: sum }
 puts sum.(10, 10) # => 20
 ```
 
-**⚠️ Important Gotcha for Constants:** Ruby's pattern matching enforces that local variable names must start with a lowercase letter. If you try to destructure a constant like `{ PI: }`, Ruby will throw a syntax error (`key must be valid as local variables`).
+### Symbol Promotion Targets
 
-To extract an exported Constant, you must alias it to a lowercase local variable first. If you need it to be a Constant in your file, just promote it immediately:
+> **⚠️ Ruby Gotcha:** Pattern matching requires that the binding target in `{ KEY: target }` be a valid local variable name — it must start with a lowercase letter. Writing `{ PI: }` or `{ PI: MyConst }` is a `SyntaxError`.
+>
+> We would love to see Ruby updated to allow constant and variable binding targets directly in hash patterns, making this workaround unnecessary.
+
+`Rb::Package` works around this limitation with **symbol promotion targets**. Instead of binding to a local variable, you supply a symbol that describes _where_ the value should land. The library promotes the value to that destination at the call site.
+
+| Pattern                        | Effect                                          |
+|--------------------------------|-------------------------------------------------|
+| `{ KEY: :_ }`                  | Promotes value as constant `KEY`                |
+| `{ KEY: :ConstName }`          | Promotes value as constant `ConstName`          |
+| `{ KEY: :'Ns::Name' }`         | Promotes value as namespaced constant `Ns::Name`|
+| `{ KEY: :'$global' }`          | Sets global variable `$global`                  |
+| `{ KEY: :'@ivar' }`            | Sets instance variable `@ivar` at the call site |
+| `{ KEY: :'@@cvar' }`           | Sets class variable `@@cvar` at the call site   |
+
+Promotion happens transparently — the pattern match succeeds and no intermediate local variable is left behind.
+
+#### Examples
 
 ```ruby
-# 1. Destructure and alias to a lowercase local variable
-import_relative('math') => { PI: pi }
+# Promote using the export key name as the constant
+import('math') => { PI: :_ }
+puts PI # => 3.14159
 
-# 2. Promote to a Constant in the current file
-PI = pi 
+# Promote to a different constant name
+import('math') => { PI: :CircleConstant }
+puts CircleConstant # => 3.14159
 
-def calculate_area(r)
-  PI * (r ** 2)
-end
+# Promote to a namespaced constant
+import('math') => { PI: :'Circle::Pi' }
+puts Circle::Pi # => 3.14159
+
+# Set a global variable
+import('math') => { PI: :'$MATH_PI' }
+puts $MATH_PI # => 3.14159
+
+# Set an instance variable at the call site
+import('math') => { PI: :'@pi' }
+puts @pi # => 3.14159
 ```
- 
- ## Example
- 
- Simple example:
- ```ruby
- cd examples/simple
- RUBYbox=1 ruby main.rb
- ```
 
- Example importing a legacy gem/package:
- ```ruby
- cd examples/legacy_gem
- gem install faker
- RUBYbox=1 ruby main.rb
- ```
+### Legacy Gem Import
+
+`import` also works with installed gems that were written before `Rb::Package` and therefore have no `EXPORTS` constant. In this case, `import` returns an anonymous proxy module. Any constant defined inside the gem can be accessed lazily, and pattern matching destructuring works via symbol promotion targets.
+
+```ruby
+import('faker') => { Faker: :_ }
+
+puts Faker::Name.name # => "John Smith"
+```
+
+## Running the Examples
+
+Simple example:
+```sh
+cd examples/simple
+RUBY_BOX=1 ruby main.rb
+```
+
+Legacy gem example:
+```sh
+cd examples/legacy_gem
+gem install faker
+RUBY_BOX=1 ruby main.rb
+```

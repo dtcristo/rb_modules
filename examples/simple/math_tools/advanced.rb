@@ -1,5 +1,4 @@
-import('math_tools/basic') => { add:, PI: pi }
-PI = pi
+import('math_tools/basic') => { add:, PI: :_ }
 
 def circle_area(radius)
   PI * (radius**2)
