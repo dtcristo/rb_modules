@@ -36,26 +36,26 @@ export(
 
 ## Importing (`import`, `import_relative`)
 
-There are two methods available globally to load these isolated files
+There are two methods available globally to load these isolated files:
 
-- `import(path)`: Resolves the path using Ruby's native `$LOAD_PATH`. Ideal for gems
-- `imports.import_relative(path)`: Resolves the path relative to the directory of the file calling it (exactly like `require_relative`). Ideal for local project files.
+- `import(path)`: Resolves the path using Ruby's native `$LOAD_PATH` or gem lookup. Ideal for gems and libraries.
+- `import_relative(path)`: Resolves the path relative to the directory of the file calling it (exactly like `require_relative`). Ideal for local project files.
 
 How you receive the imported data depends on how you assign it.
 
 ### The Single Import
 
-If the target file used a Single Export, `import` returns that exact object.
+If the target file used a Single Export, `import` / `import_relative` returns that exact object.
 
 ```ruby
-Customer = import 'user'
+Customer = import_relative 'user'
 
 alice = Customer.new("Alice")
 ```
 
 ### The Namespace Import
 
-If the target file exported multiple items via a Hash, `import` returns an anonymous Module containing those exports. You can assign it to a constant to act as a namespace.
+If the target file exported multiple items via a Hash, the import returns an anonymous Module containing those exports. You can assign it to a constant to act as a namespace.
 
 - Exported keys starting with a **Capital** letter become Constants on the module.
 - Exported keys starting with a **lowercase** letter become singleton methods on the module.
@@ -76,7 +76,7 @@ puts MathUtils.add(5, 5)  # => 10
 Instead of assigning the entire namespace to a constant, you can use Ruby's rightward assignment (`=>`) pattern matching to pluck exactly what you need.
 
 ```ruby
-import('math') => { add:, version: }
+import_relative('math') => { add:, version: }
 
 puts add.(5, 5) # => 10
 puts version    # => "1.0.0"
@@ -85,7 +85,7 @@ puts version    # => "1.0.0"
 Rename an import with an alias:
 
 ```ruby
-import('math') => { add: sum }
+import_relative('math') => { add: sum }
 puts sum.(10, 10) # => 20
 ```
 
@@ -151,18 +151,45 @@ Faker = import('faker').fetch(:Faker)
 
 puts "Hello, #{Faker::Name.name}!"
 ```
- 
- ## Example
- 
- Simple example:
- ```ruby
- cd examples/simple
- RUBYbox=1 ruby main.rb
- ```
 
- Example importing a bare gem/script:
- ```ruby
- cd examples/bare_gem
- gem install faker
- RUBYbox=1 ruby main.rb
- ```
+## Examples
+
+### Minimal
+
+Four packages (`main`, `foo`, `bar`, `baz`) in a flat directory using `import_relative`. Demonstrates single/hash exports, cross-package dependencies, and destructuring.
+
+```sh
+RUBY_BOX=1 ruby examples/minimal/main.rb
+```
+
+### Complex
+
+An adventure game with three packages in a `packages/` directory using zeitwerk-style naming. Demonstrates all features including `bundler/setup` for gem dependencies, cross-package imports, `fetch`/`fetch_values`, constants, and re-exports.
+
+- **adventure**: Uses `faker` and `colorize` gems via its own `gems.rb` and `bundler/setup`
+- **quest**: Hash exports with constants, version strings, and callable methods
+- **loot**: Cross-package `import_relative` from quest, single export with hash
+
+```sh
+# Install adventure package gems (first time only)
+cd examples/complex/packages/adventure && BUNDLE_GEMFILE=gems.rb bundle install && cd -
+
+RUBY_BOX=1 ruby examples/complex/main.rb
+```
+
+## Running
+
+```sh
+# Run all tests
+RUBY_BOX=1 rake test
+
+# Run all examples
+RUBY_BOX=1 rake examples
+
+# Run a specific example
+RUBY_BOX=1 rake example:minimal
+RUBY_BOX=1 rake example:complex
+
+# Run everything (default)
+RUBY_BOX=1 rake
+```
