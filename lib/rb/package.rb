@@ -62,8 +62,8 @@ module Rb
                   end
                 end
               end
-              return box
             end
+            return box
           end
         end
       end
