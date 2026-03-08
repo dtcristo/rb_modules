@@ -2,5 +2,6 @@
 
 source 'https://rubygems.org'
 
-gem 'faker', '~> 3.0'
 gem 'colorize', '~> 1.1'
+gem 'chronic', '~> 0.10.2'
+gem 'dotenv', '~> 3.0'

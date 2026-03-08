@@ -2,15 +2,14 @@
 
 module Adventure
   class Character
-    attr_reader :name, :title, :catchphrase
+    attr_reader :name, :role, :motto
 
-    def initialize
-      # Faker is set up in adventure.rb (same box), accessible here via constant lookup
-      @name = Faker::Name.name
-      @title = Faker::Job.title
-      @catchphrase = Faker::TvShows::StarTrek.villain
+    def initialize(name:, role:, motto:)
+      @name = name
+      @role = role
+      @motto = motto
     end
 
-    def to_s = "#{@name} the #{@title}".colorize(:cyan)
+    def to_s = "#{@name} the #{@role}".colorize(:cyan)
   end
 end

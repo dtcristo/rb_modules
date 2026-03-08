@@ -1,0 +1,21 @@
+PATH
+  remote: root_only_toolkit
+  specs:
+    root_only_toolkit (0.1.0)
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+
+PLATFORMS
+  arm64-darwin-25
+  ruby
+
+DEPENDENCIES
+  root_only_toolkit!
+
+CHECKSUMS
+  root_only_toolkit (0.1.0)
+
+BUNDLED WITH
+  4.0.3

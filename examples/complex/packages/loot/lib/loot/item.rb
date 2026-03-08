@@ -2,59 +2,31 @@
 
 module Loot
   class Item
-    attr_reader :name, :tier, :power
+    attr_reader :name, :tier, :weather, :weather_boost, :planner_name
 
-    ITEMS = {
-      common: [
-        'Wooden Sword',
-        'Leather Boots',
-        'Torn Map',
-        'Rusty Shield',
-        'Stale Bread',
-      ],
-      uncommon: [
-        'Iron Axe',
-        'Chainmail Vest',
-        'Healing Potion',
-        'Silver Ring',
-        'Enchanted Torch',
-      ],
-      rare: [
-        'Flamebrand Sword',
-        'Mithril Armor',
-        'Scroll of Fireball',
-        'Dragon Scale Shield',
-        'Boots of Speed',
-      ],
-      epic: [
-        'Excalibur',
-        'Cloak of Invisibility',
-        'Staff of the Archmage',
-        'Crown of Kings',
-        'Amulet of Eternity',
-      ],
-    }.freeze
-
-    POWER = {
-      common: 1..10,
-      uncommon: 11..25,
-      rare: 26..50,
-      epic: 51..100,
-    }.freeze
-
-    def initialize(name, tier)
+    def initialize(name:, tier:, weather:, weather_boost:, planner_name:)
       @name = name
       @tier = tier
-      @power = rand(POWER.fetch(tier, 1..10))
+      @weather = weather
+      @weather_boost = weather_boost
+      @planner_name = planner_name
     end
 
-    def to_s = "#{@name} [#{@tier}] (power: #{@power}) — slain by #{@flavor}"
+    def to_s
+      "#{@name} [#{@tier}] for #{@weather} weather " \
+        "(+#{@weather_boost}, via #{@planner_name})"
+    end
 
-    def self.random(tier = :common, flavor = nil)
-      name = ITEMS.fetch(tier, ITEMS[:common]).sample
-      item = new(name, tier)
-      item.instance_variable_set(:@flavor, flavor || 'a nameless beast')
-      item
+    def self.random(
+      tier:,
+      weather:,
+      weather_boost:,
+      planner_name:,
+      kits_by_tier:
+    )
+      kits = kits_by_tier.fetch(tier, kits_by_tier.fetch(:common))
+      name = kits.sample || 'Backup ration pack'
+      new(name:, tier:, weather:, weather_boost:, planner_name:)
     end
   end
 end

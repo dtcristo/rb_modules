@@ -2,53 +2,53 @@
 
 module Quest
   class Challenge
-    QUEST_NAMES = [
-      'The Dragon of Mount Doom',
-      'The Lost Temple of Ruby',
-      'The Goblin King\'s Riddle',
-      'The Enchanted Forest',
-      'The Siege of Syntax Castle',
-    ].freeze
-
-    CHALLENGES = {
+    STAGES = {
       easy: [
-        'Cross the rickety bridge',
-        'Solve the farmer\'s riddle',
-        'Find the hidden key',
+        'Review map checkpoints',
+        'Pack daylight supplies',
+        'Confirm basecamp radio channel',
       ],
       medium: [
-        'Defeat the troll guardian',
-        'Navigate the maze of mirrors',
-        'Decode the ancient scroll',
+        'Cross the fog valley before noon',
+        'Secure rope anchors on the cliff route',
+        'Set up satellite check-in',
       ],
       hard: [
-        'Battle the shadow knight',
-        'Survive the fire swamp',
-        'Outsmart the sphinx',
+        'Traverse the ice bridge at first light',
+        'Tag the hidden cave entrance',
+        'Carry backup power through the ridge winds',
       ],
       legendary: [
-        'Slay the elder dragon',
-        'Break the curse of eternity',
-        'Conquer the tower of trials',
+        'Reach summit relay before storm front',
+        'Extract crystal sample at the north wall',
+        'Return via the silent pass before midnight',
       ],
     }.freeze
 
-    def self.generate(difficulty)
-      pool = CHALLENGES.fetch(difficulty, CHALLENGES[:medium])
-      count =
-        case difficulty
-        when :easy
-          1
-        when :medium
-          2
-        when :hard
-          3
-        when :legendary
-          4
-        else
-          2
-        end
-      pool.sample(count)
+    DESTINATION_WEATHER = {
+      'Crystal Caves' => :storm,
+      'Sapphire Ridge' => :snow,
+      'Sunspire Dunes' => :sun,
+    }.freeze
+
+    LEADS = [
+      'Captain Ada',
+      'Scout Linus',
+      'Engineer Grace',
+      'Guide Matz',
+    ].freeze
+
+    def self.generate(difficulty, max_steps:)
+      pool = STAGES.fetch(difficulty, STAGES[:medium])
+      pool.first(max_steps)
     end
+
+    def self.weather_for(destination)
+      DESTINATION_WEATHER.fetch(destination, :clear)
+    end
+
+    def self.lead = LEADS.sample
   end
 end
+
+export Quest::Challenge

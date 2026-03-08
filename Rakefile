@@ -16,18 +16,22 @@ namespace :example do
     task name.to_sym do
       dir = File.join('examples', name)
 
-      # Install gems for any packages that have a gems.rb
-      Dir
-        .glob(File.join(dir, '**/gems.rb'))
-        .each do |gemfile|
-          pkg_dir = File.dirname(gemfile)
-          lockfile = File.join(pkg_dir, 'gems.locked')
-          unless File.exist?(lockfile)
-            sh "cd #{pkg_dir} && BUNDLE_GEMFILE=gems.rb bundle install"
+      Bundler.with_unbundled_env do
+        # Install gems for any package/local example gemfile.
+        Dir
+          .glob(File.join(dir, '**/{gems.rb,Gemfile}'))
+          .each do |gemfile|
+            pkg_dir = File.dirname(gemfile)
+            gemfile_name = File.basename(gemfile)
+            sh(
+              "cd #{pkg_dir} && " \
+                "BUNDLE_GEMFILE=#{gemfile_name} bundle check || " \
+                "BUNDLE_GEMFILE=#{gemfile_name} bundle install",
+            )
           end
-        end
 
-      sh "RUBY_BOX=1 ruby #{File.join(dir, 'main.rb')}"
+        sh "RUBY_BOX=1 ruby #{File.join(dir, 'main.rb')}"
+      end
     end
   end
 end

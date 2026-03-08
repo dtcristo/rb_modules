@@ -129,7 +129,7 @@ end
 import_relative('math') => { PI: pi }
 
 # 2. Promote to a Constant in the current file
-PI = pi 
+PI = pi
 
 def calculate_area(r)
   PI * (r ** 2)
@@ -141,9 +141,10 @@ end
 If a gem or script file doesn't export anything explicitly (no `export` call), `import` returns the isolated `Package::Box` instance itself (`Package::Box < Ruby::Box`). This allows you to access any constants or methods defined within that gem/script directly through the Box namespace.
 
 ```ruby
-Faker = import('faker')::Faker
+ChronicBox = import('chronic')
+Chronic = ChronicBox::Chronic
 
-puts "Hello, #{Faker::Name.name}!"
+puts Chronic.parse('tomorrow 9am')
 ```
 
 ## Per-Package Gem Dependencies
@@ -156,8 +157,8 @@ ENV['BUNDLE_GEMFILE'] = File.expand_path('../gems.rb', __dir__)
 require 'bundler/setup'
 
 # Now gems from this package's bundle are on $LOAD_PATH
-require 'faker'
-Faker = ::Faker
+require 'dotenv'
+config = Dotenv.parse(File.expand_path('../.env', __dir__))
 
 # ... rest of package
 ```
@@ -180,18 +181,18 @@ RUBY_BOX=1 ruby examples/minimal/main.rb
 
 ### Complex
 
-An adventure game with three packages in a `packages/` directory using zeitwerk-style naming. Demonstrates all features including `bundler/setup` for per-package gem dependencies, cross-package `import`, `fetch`/`fetch_values`, constants, and namespace-qualified gem constants.
+A route-planning demo with three packages in a `packages/` directory using zeitwerk-style naming. Demonstrates single export, hash export, `import`, `import_relative`, destructuring, `fetch`/`fetch_values`, constants, and isolated gem bundles.
 
-- **adventure**: Uses `faker` (`~> 3.0`) and `colorize` via its own `gems.rb` and `bundler/setup`. Requires faker as `Faker = ::Faker`.
-- **quest**: Pure-Ruby package. Hash exports with constants, version strings, and callable methods.
-- **loot**: Uses `faker` (`~> 2.0`) via its own `gems.rb` and `bundler/setup` (each box gets an isolated `Faker` constant). Cross-package `import 'quest'`.
+- **main**: Uses a local `examples/complex/Gemfile` with a root-only path gem (`root_only_toolkit`).
+- **adventure**: Uses `dotenv` (`~> 3.0`), `colorize`, and `chronic` via package-local `gems.rb`.
+- **quest**: Pure-Ruby planner package; also checks that root-only gems from `main` do **not** leak into child import boxes.
+- **loot**: Uses `dotenv` (`~> 2.0`) via package-local `gems.rb` in a helper subprocess, proving two versions of the same gem can coexist in the example flow.
 
-Each package adds all sibling `packages/*/lib` dirs to `$LOAD_PATH` so cross-package imports resolve by name. `main.rb` does the same before calling `import`.
-
-> **Note**: `Process.exit!(0)` is called at the end of `main.rb` to bypass a known `Ruby::Box` experimental VM teardown crash that occurs when multiple boxes have loaded native-extension gems (e.g. `concurrent-ruby`, a faker transitive dependency).
+Each package adds sibling `packages/*/lib` dirs to `$LOAD_PATH` so cross-package imports resolve by name. `main.rb` does the same before calling `import`.
 
 ```sh
-# Install gems for packages that need them (first time only)
+# Install gems used by the complex example
+cd examples/complex && bundle install && cd -
 cd examples/complex/packages/adventure && BUNDLE_GEMFILE=gems.rb bundle install && cd -
 cd examples/complex/packages/loot && BUNDLE_GEMFILE=gems.rb bundle install && cd -
 

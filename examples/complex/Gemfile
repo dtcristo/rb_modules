@@ -2,4 +2,4 @@
 
 source 'https://rubygems.org'
 
-gem 'dotenv', '~> 2.0'
+gem 'root_only_toolkit', path: 'root_only_toolkit'
